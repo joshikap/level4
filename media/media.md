@@ -3,7 +3,6 @@ layout: fortunefinders
 title: Media Bias Game
 permalink: /media
 ---
-
 <style>
 body {
     background-color: #181414;

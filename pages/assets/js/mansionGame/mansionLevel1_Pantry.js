@@ -125,4 +125,3 @@ const sprite_src_pantrydoor = path + "/images/gamify/invisDoorCollisionSprite.pn
 
 }
 
-export default MansionLevel1_Pantry;
