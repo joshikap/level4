@@ -1,6 +1,6 @@
 // Murder Mystery Level 4 - 
-import GameControl from '/assets/js/GameEngine/essentials/GameControl.js';
-import GameEnvBackground from '/assets/js/GameEngine/essentials/GameEnvBackground.js';
+import GameControl from '../GameEngine/essentials/GameControl.js';
+import GameEnvBackground from '../GameEngine/essentials/GameEnvBackground.js';
 
 // Flashlight effect game object
 class FlashlightEffect {
