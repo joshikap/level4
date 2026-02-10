@@ -1,5 +1,5 @@
 // GameControl.js with improved level transition handling
-import GameLevel from "./murderMysteryGameLogic/GameLevel.js";
+import GameLevel from "./GameLevel.js";
 
 class GameControl {
     /**
@@ -17,23 +17,22 @@ class GameControl {
         this.currentLevel = null;
         this.currentLevelIndex = 0;
         this.gameLoopCounter = 0;
-    this.isPaused = false;
-    this.animFrameId = null;
+        this.isPaused = false;
     // Optional reference to a PauseMenu instance. If set, Escape will toggle it.
     this.pauseMenu = null;
     // Optional per-game PauseMenu configuration (passed to the shared PauseMenu by Game.js)
     // Games can override these values if they want to count a different stat name/label.
     this.pauseMenuOptions = {
-        counterVar: 'levelsCompleted',
-        counterLabel: 'Levels completed',
-        // Use a cumulative levels-completed counter instead of per-level counts
-        counterPerLevel: false
+        counterVar: 'coinsCollected',
+        counterLabel: 'Coins collected',
+        scoreVar: 'coinsCollected'
     };
+    // Whether to show per-level counts. We want a single cumulative counter for coins collected.
+    this.pauseMenuOptions.counterPerLevel = false;
     // use a unique storage key so stats are per-game
-    this.pauseMenuOptions.storageKey = 'pauseMenuStats:mansion';
+    this.pauseMenuOptions.storageKey = 'pauseMenuStats:adventure';
     this.skipKeyListener = this.handleSkipKey.bind(this);
-    this.exitKeyListener = this.handleExitKey.bind(this);
-    this.pauseKeyListener = this.handlePauseKey.bind(this);
+        this.exitKeyListener = this.handleExitKey.bind(this);
         this.gameOver = null; // Callback for when the game is over 
         this.savedCanvasState = []; // Save the current levels game elements 
         
@@ -46,10 +45,7 @@ class GameControl {
     
     start() {
         // Don't add exit key listener - Game.js handles it via _setupEscapeKey()
-        // Add listener for opening the pause menu (toggle with 'p') and skip key (L)
-        document.addEventListener('keydown', this.pauseKeyListener);
         this.addSkipKeyListener();
-        // PauseMenu is initialized by the shared Game core (optional dynamic import).
         this.transitionToLevel();
     }
 
@@ -129,18 +125,6 @@ class GameControl {
         // Clean up any lingering interaction handlers
         this.cleanupInteractionHandlers();
 
-        // If there's an existing level instance, destroy it before creating the next one.
-        // This ensures canvases and game objects from the previous level are removed
-        // and prevents leftover player canvases that can't be controlled.
-        if (this.currentLevel && typeof this.currentLevel.destroy === 'function') {
-            try {
-                this.currentLevel.destroy();
-            } catch (e) {
-                console.error('Error destroying previous level:', e);
-            }
-            this.currentLevel = null;
-        }
-
         const GameLevelClass = this.levelClasses[this.currentLevelIndex];
         this.currentLevel = new GameLevel(this);
         this.currentLevel.create(GameLevelClass);
@@ -187,53 +171,44 @@ class GameControl {
      * 3. Transitioning to the next level
      */
     handleLevelEnd() {
-        // Increment configured per-game counter (PauseMenu displays this variable)
-        try {
-            const cv = (this.pauseMenuOptions && this.pauseMenuOptions.counterVar) || 'levelsCompleted';
-            const perLevel = (this.pauseMenuOptions && this.pauseMenuOptions.counterPerLevel) || false;
-            if (!this.stats) this.stats = {};
-            if (perLevel) {
-                if (!this.stats.levels) this.stats.levels = {};
-                const levelKey = (typeof this.currentLevelIndex !== 'undefined') ? String(this.currentLevelIndex) : ((this.currentLevel && this.currentLevel.id) || '0');
-                this.stats.levels[levelKey] = (this.stats.levels[levelKey] || 0) + 1;
-            } else {
-                this[cv] = (this[cv] || 0) + 1;
-                this.stats[cv] = this[cv];
-            }
-            if (this.pauseMenu && typeof this.pauseMenu._updateStatsDisplay === 'function') this.pauseMenu._updateStatsDisplay();
-        } catch (e) { /* ignore */ }
-
-        // Alert the user that the level has ended
-        if (this.currentLevelIndex < this.levelClasses.length - 1) {
-            alert("Level ended.");
-        } else {
-            alert("All levels completed.");
-        }
+        // NOTE: For adventure game, the pause menu counter (coinsCollected) is NOT incremented here.
+        // It is ONLY incremented by coin collection via the collectCoin() method.
+        // Level completion or skipping should not affect the coin counter.
         
         // Clean up any lingering interaction handlers
         this.cleanupInteractionHandlers();
-        
-        this.currentLevel.destroy();
-        
-        // Call the gameOver callback if it exists
-        if (this.gameOver) {
-            this.gameOver();
-        } else {
-            // Move to next level; if no level exists, fall back to original set
-            this.currentLevelIndex++;
 
-            // Guard against empty level arrays when a single-level side area is skipped
-            if (this.currentLevelIndex >= this.levelClasses.length) {
-                if (this._originalLevelClasses && this._originalLevelClasses.length) {
-                    this.levelClasses = this._originalLevelClasses;
-                    this.currentLevelIndex = 0;
-                } else {
-                    console.warn('No further levels available; stopping transition');
-                    return;
-                }
+        // Destroy current level safely
+        try {
+            if (this.currentLevel && typeof this.currentLevel.destroy === 'function') {
+                this.currentLevel.destroy();
             }
+        } catch (e) {
+            console.error('Error destroying current level:', e);
+        }
 
-            this.transitionToLevel();
+        // If there are more levels, advance. Otherwise finish gracefully.
+        if (this.currentLevelIndex < this.levelClasses.length - 1) {
+            // Inform user and go to next level
+            //try { alert("Level ended."); } catch (e) { /* ignore */ }
+            if (this.gameOver) {
+                this.gameOver();
+            } else {
+                this.currentLevelIndex++;
+                this.transitionToLevel();
+            }
+        } else {
+            // Final level completed: prefer game.returnHome() if available,
+            // otherwise call gameOver callback or show a completion message.
+            if (this.game && typeof this.game.returnHome === 'function') {
+                this.game.returnHome();
+            } else if (this.gameOver) {
+                this.gameOver();
+            } else {
+                try { alert("All levels completed."); } catch (e) { /* ignore */ }
+            }
+            // Ensure no dangling currentLevel reference
+            this.currentLevel = null;
         }
     }
 
@@ -257,30 +232,6 @@ class GameControl {
                 } catch (e) {
                     console.warn('Error toggling pause menu:', e);
                 }
-            } else {
-                // When no pause menu is present, just toggle pause/resume instead of ending level
-                if (this.isPaused) {
-                    this.resume();
-                } else {
-                    this.pause();
-                }
-            }
-        }
-    }
-
-    /**
-     * Handle pause-key to toggle pause menu (default: 'p')
-     */
-    handlePauseKey(event) {
-        // Don't interfere with typing in inputs
-        const tag = event.target && event.target.tagName;
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || event.defaultPrevented) return;
-
-        if (event.key === 'p' || event.key === 'P') {
-            if (this.isPaused) {
-                this.hidePauseMenu();
-            } else {
-                this.showPauseMenu();
             }
         }
     }
@@ -294,6 +245,10 @@ class GameControl {
         if (tag === 'INPUT' || tag === 'TEXTAREA' || event.defaultPrevented) return;
 
         if (event.key === 'l' || event.key === 'L') {
+            // If on the last level and no return handler exists, ignore; otherwise allow skip to trigger level-end flow
+            if (this.currentLevelIndex >= this.levelClasses.length - 1 && !(this.game && typeof this.game.returnHome === 'function')) {
+                return;
+            }
             // Call the public API to end/skip the level
             try {
                 this.endLevel();
@@ -311,39 +266,6 @@ class GameControl {
         document.removeEventListener('keydown', this.skipKeyListener);
     }
 
-    showPauseMenu() {
-        // Pause the game loop and show the UI
-        this.pause();
-        if (this.pauseMenu && typeof this.pauseMenu.show === 'function') {
-            this.pauseMenu.show();
-        }
-    }
-
-    hidePauseMenu() {
-        if (this.pauseMenu && typeof this.pauseMenu.hide === 'function') {
-            this.pauseMenu.hide();
-        }
-        this.resume();
-    }
-
-    /**
-     * Restart the current level by destroying and transitioning to it again
-     */
-    restartLevel() {
-        if (this.currentLevel) {
-            try {
-                this.currentLevel.destroy();
-            } catch (e) {
-                console.error('Error destroying level during restart:', e);
-            }
-        }
-        // ensure interaction handlers cleaned
-        this.cleanupInteractionHandlers();
-        // Recreate the same level
-        this.currentLevel = null;
-        this.transitionToLevel();
-    }
-    
     /**
      * End the current level (public API)
      */
@@ -361,6 +283,7 @@ class GameControl {
             this[statName] = (this[statName] || 0) + Number(amount || 0);
             if (this.stats) this.stats[statName] = this[statName];
             if (this.pauseMenu && typeof this.pauseMenu._updateStatsDisplay === 'function') this.pauseMenu._updateStatsDisplay();
+            if (this.pauseMenu && typeof this.pauseMenu._saveStatsToStorage === 'function') this.pauseMenu._saveStatsToStorage();
         } catch (e) {
             console.warn('incrementStat error', e);
         }
@@ -372,8 +295,44 @@ class GameControl {
             if (!this.stats) this.stats = { points: this.points };
             this.stats.points = this.points;
             if (this.pauseMenu && typeof this.pauseMenu._updateStatsDisplay === 'function') this.pauseMenu._updateStatsDisplay();
+            if (this.pauseMenu && typeof this.pauseMenu._saveStatsToStorage === 'function') this.pauseMenu._saveStatsToStorage();
         } catch (e) {
             console.warn('addPoints error', e);
+        }
+    }
+
+    /**
+     * Increment coin collection counter for adventure game pause menu
+     */
+    collectCoin(amount = 1) {
+        try {
+            this.coinsCollected = (this.coinsCollected || 0) + Number(amount || 0);
+            if (!this.stats) this.stats = {};
+            this.stats.coinsCollected = this.coinsCollected;
+            if (this.pauseMenu && typeof this.pauseMenu._updateStatsDisplay === 'function') this.pauseMenu._updateStatsDisplay();
+            if (this.pauseMenu && typeof this.pauseMenu._saveStatsToStorage === 'function') this.pauseMenu._saveStatsToStorage();
+        } catch (e) {
+            console.warn('collectCoin error', e);
+        }
+    }
+
+    /**
+     * Called by an attached PauseMenu to show the menu (pauses the game)
+     */
+    showPauseMenu() {
+        if (this.pauseMenu && typeof this.pauseMenu.show === 'function') {
+            this.pause();
+            this.pauseMenu.show();
+        }
+    }
+
+    /**
+     * Called by an attached PauseMenu to hide the menu (resumes the game)
+     */
+    hidePauseMenu() {
+        if (this.pauseMenu && typeof this.pauseMenu.hide === 'function') {
+            this.pauseMenu.hide();
+            this.resume();
         }
     }
     
@@ -389,8 +348,7 @@ class GameControl {
 
     // Helper method to save the current canvas id and image data in the game container
     saveCanvasState() {
-        const gameContainer = document.getElementById('gameContainer');
-        const canvasElements = gameContainer.querySelectorAll('canvas');
+        const canvasElements = this.gameContainer.querySelectorAll('canvas');
         this.savedCanvasState = Array.from(canvasElements).map(canvas => {
             return {
                 id: canvas.id,
@@ -401,8 +359,7 @@ class GameControl {
 
     // Helper method to hide the current canvas state in the game container
     hideCanvasState() {
-        const gameContainer = document.getElementById('gameContainer');
-        const canvasElements = gameContainer.querySelectorAll('canvas');
+        const canvasElements = this.gameContainer.querySelectorAll('canvas');
         canvasElements.forEach(canvas => {
             if (canvas.id !== 'gameCanvas') {
                 canvas.style.display = 'none';
@@ -412,7 +369,6 @@ class GameControl {
 
     // Helper method to restore the hidden canvas item to be visible
     showCanvasState() {
-        const gameContainer = document.getElementById('gameContainer');
         this.savedCanvasState.forEach(hidden_canvas => {
             const canvas = document.getElementById(hidden_canvas.id);
             if (canvas) {
@@ -436,5 +392,199 @@ class GameControl {
         this.isPaused = false;
     }
 }
+
+// --- Flappy-like mini-game integration ---
+// The following block integrates the provided Flappy code into this module.
+// It preserves all original variable names and creates the necessary DOM
+// elements only if they are not already present in the document.
+(function integrateFlappy() {
+    // If the canvas already exists, assume the mini-game is already present.
+    if (document.getElementById('flappyCanvas')) return;
+
+    // Create container with inline styles (matches provided HTML)
+    const container = document.createElement('div');
+    container.id = 'gameContainer';
+    container.style.position = 'relative';
+    container.style.width = '100%';
+    container.style.maxWidth = '400px';
+    container.style.height = '400px';
+    container.style.background = '#70c5ce';
+    container.style.overflow = 'hidden';
+    container.style.border = '4px solid #333';
+    container.style.borderRadius = '10px';
+    container.style.margin = '20px auto';
+
+    const canvasEl = document.createElement('canvas');
+    canvasEl.id = 'flappyCanvas';
+    canvasEl.style.display = 'block';
+    container.appendChild(canvasEl);
+
+    const scoreDiv = document.createElement('div');
+    scoreDiv.id = 'scoreDisplay';
+    scoreDiv.style.position = 'absolute';
+    scoreDiv.style.top = '15px';
+    scoreDiv.style.width = '100%';
+    scoreDiv.style.textAlign = 'center';
+    scoreDiv.style.fontFamily = "'Arial Black', sans-serif";
+    scoreDiv.style.fontSize = '32px';
+    scoreDiv.style.color = 'white';
+    scoreDiv.style.textShadow = '2px 2px #000';
+    scoreDiv.style.pointerEvents = 'none';
+    scoreDiv.innerText = '0';
+    container.appendChild(scoreDiv);
+
+    // Append to body (non-intrusive). If a game container exists in the app UI,
+    // developers can move these nodes where desired.
+    document.body.appendChild(container);
+
+    // --- Begin provided game JS (variable names preserved) ---
+    const canvas = document.getElementById('flappyCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreElement = document.getElementById('scoreDisplay');
+
+    canvas.width = 400;
+    canvas.height = 400;
+
+    // --- CONFIGURATION ---
+    const config = {
+        gravity: 0.25,
+        jump: -5.5,
+        pipeSpeed: 2.5,
+        pipeInterval: 90, // spawn every 90 frames
+        gap: 130,         // size of the hole to fly through
+        birdSize: 30
+    };
+
+    // --- STATE ---
+    let bird = { x: 50, y: 200, velocity: 0 };
+    let pipes = [];
+    let score = 0;
+    let frames = 0;
+    let isGameOver = false;
+
+    // --- CONTROLS ---
+    const handleAction = () => {
+        if (isGameOver) restart();
+        else bird.velocity = config.jump;
+    };
+
+    window.addEventListener('keydown', (e) => { if (e.code === 'Space') handleAction(); });
+    canvas.addEventListener('mousedown', handleAction);
+
+    function restart() {
+        bird = { x: 50, y: 200, velocity: 0 };
+        pipes = [];
+        score = 0;
+        frames = 0;
+        isGameOver = false;
+        scoreElement.innerText = "0";
+        render();
+    }
+
+    function spawnPipe() {
+        const minHeight = 40;
+        const maxHeight = canvas.height - config.gap - minHeight;
+        const topHeight = Math.floor(Math.random() * (maxHeight - minHeight + 1)) + minHeight;
+        
+        pipes.push({
+            x: canvas.width,
+            top: topHeight,
+            width: 50,
+            passed: false
+        });
+    }
+
+    // --- CORE LOOP ---
+    function render() {
+        if (isGameOver) return;
+
+        // 1. Background
+        ctx.fillStyle = "#70c5ce";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 2. Physics
+        bird.velocity += config.gravity;
+        bird.y += bird.velocity;
+
+        // 3. Pipe Logic & Collision Detection
+        if (frames % config.pipeInterval === 0) spawnPipe();
+
+        for (let i = pipes.length - 1; i >= 0; i--) {
+            let p = pipes[i];
+            p.x -= config.pipeSpeed;
+
+            // Draw Pipes
+            ctx.fillStyle = "#2ecc71";
+            ctx.strokeStyle = "#1a5c34";
+            ctx.lineWidth = 2;
+            
+            // Top Pipe
+            ctx.fillRect(p.x, 0, p.width, p.top);
+            ctx.strokeRect(p.x, 0, p.width, p.top);
+            // Bottom Pipe
+            ctx.fillRect(p.x, p.top + config.gap, p.width, canvas.height);
+            ctx.strokeRect(p.x, p.top + config.gap, p.width, canvas.height);
+
+            // --- COLLISION LOGIC ---
+            // Create a small hitbox padding for "forgiveness"
+            const padding = 4;
+            const birdRect = {
+                left: bird.x + padding,
+                right: bird.x + config.birdSize - padding,
+                top: bird.y + padding,
+                bottom: bird.y + config.birdSize - padding
+            };
+
+            // Check if bird is within pipe's X-range
+            if (birdRect.right > p.x && birdRect.left < p.x + p.width) {
+                // Check if bird hits top or bottom pipe
+                if (birdRect.top < p.top || birdRect.bottom > p.top + config.gap) {
+                    endGame();
+                }
+            }
+
+            // Score check
+            if (!p.passed && bird.x > p.x + p.width) {
+                score++;
+                p.passed = true;
+                scoreElement.innerText = score;
+            }
+
+            if (p.x + p.width < 0) pipes.splice(i, 1);
+        }
+
+        // 4. Boundary Collision (Floor/Ceiling)
+        if (bird.y + config.birdSize > canvas.height || bird.y < 0) {
+            endGame();
+        }
+
+        // 5. Draw Bird
+        ctx.fillStyle = "#f1c40f";
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 2;
+        ctx.fillRect(bird.x, bird.y, config.birdSize, config.birdSize);
+        ctx.strokeRect(bird.x, bird.y, config.birdSize, config.birdSize);
+
+        frames++;
+        requestAnimationFrame(render);
+    }
+
+    function endGame() {
+        isGameOver = true;
+        ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = "white";
+        ctx.textAlign = "center";
+        ctx.font = "bold 24px Arial";
+        ctx.fillText("CRASHED!", canvas.width / 2, canvas.height / 2 - 10);
+        ctx.font = "16px Arial";
+        ctx.fillText("Click to Try Again", canvas.width / 2, canvas.height / 2 + 25);
+    }
+
+    // Start the game loop
+    render();
+    // --- End Flappy mini-game ---
+})();
 
 export default GameControl;
