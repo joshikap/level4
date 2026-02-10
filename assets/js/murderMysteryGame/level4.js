@@ -82,6 +82,90 @@ class FlashlightEffect {
   }
 }
 
+// Player Interaction Button
+class PlayerInteractionButton {
+  constructor(data, gameEnv) {
+    this.gameEnv = gameEnv;
+    this.isVisible = false;
+    this.buttonText = 'Talk [E]';
+    this.buttonWidth = 120;
+    this.buttonHeight = 40;
+    this.buttonX = gameEnv.innerWidth / 2 - this.buttonWidth / 2;
+    this.buttonY = gameEnv.innerHeight - 100;
+    this.keyPressed = false;
+    
+    // Setup keyboard listener
+    this.setupKeyListener();
+  }
+
+  setupKeyListener() {
+    document.addEventListener('keydown', (e) => {
+      if (e.key.toLowerCase() === 'e' || e.key === 'E') {
+        if (!this.keyPressed) {
+          this.keyPressed = true;
+          this.onInteract();
+        }
+      }
+    });
+
+    document.addEventListener('keyup', (e) => {
+      if (e.key.toLowerCase() === 'e' || e.key === 'E') {
+        this.keyPressed = false;
+      }
+    });
+  }
+
+  onInteract() {
+    // Handle interaction logic here
+    console.log('Player interacted with E key');
+    // You can emit events or trigger dialogue here
+  }
+
+  showButton() {
+    this.isVisible = true;
+  }
+
+  hideButton() {
+    this.isVisible = false;
+  }
+
+  update() {
+    if (!this.isVisible) return;
+
+    const ctx = this.gameEnv.ctx;
+    if (!ctx) return;
+
+    // Draw button background
+    ctx.fillStyle = 'rgba(100, 150, 255, 0.8)';
+    ctx.fillRect(this.buttonX, this.buttonY, this.buttonWidth, this.buttonHeight);
+
+    // Draw button border
+    ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(this.buttonX, this.buttonY, this.buttonWidth, this.buttonHeight);
+
+    // Draw button text
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 14px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(
+      this.buttonText,
+      this.buttonX + this.buttonWidth / 2,
+      this.buttonY + this.buttonHeight / 2
+    );
+  }
+
+  resize() {
+    // Update button position on resize
+    this.buttonX = this.gameEnv.innerWidth / 2 - this.buttonWidth / 2;
+  }
+
+  destroy() {
+    // Cleanup event listeners
+  }
+}
+
 // Custom level for murder mystery flashlight game
 class MurderMysteryFlashlightLevel {
   constructor(gameEnv) {
@@ -97,10 +181,15 @@ class MurderMysteryFlashlightLevel {
     const flashlightData = {
       id: 'flashlight'
     };
+
+    const interactionButtonData = {
+      id: 'interaction_button'
+    };
     
     this.classes = [
       { class: GameEnvBackground, data: bgData },
-      { class: FlashlightEffect, data: flashlightData }
+      { class: FlashlightEffect, data: flashlightData },
+      { class: PlayerInteractionButton, data: interactionButtonData }
     ];
   }
 }
