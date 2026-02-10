@@ -2,6 +2,15 @@
 import GameControl from '../GameEngine/essentials/GameControl.js';
 import GameEnvBackground from '../GameEngine/essentials/GameEnvBackground.js';
 
+const image_background = path + "/images/darkcave.png"; // be sure to include the path
+    const image_data_background = {
+        name: 'background',
+        greeting: "This is the dark cave. Search for the key",
+        src: image_background,
+        pixels: {height: 580, width: 1038},
+        mode: 'contain',
+    };
+
 // Flashlight effect game object
 class FlashlightEffect {
   constructor(data, gameEnv) {
