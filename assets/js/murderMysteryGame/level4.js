@@ -81,7 +81,7 @@ class MurderMysteryFlashlightLevel {
     // Black background for dark atmosphere
     const bgData = {
       name: 'dark_background',
-      src: path + "/images/gamebuilder/alien_planet.jpg",
+      src: path + "/images/gamebuilder/darkcave.png",
       pixels: { height: 600, width: 1000 }
     };
     
