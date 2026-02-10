@@ -56,6 +56,22 @@ class MurderMysteryL5 {
         keypress: {}
     };
 
+  // Sword sprite that triggers the teleport
+    const gun sprite data = {
+        id: 'Hand Cannon',
+        greeting: "A sturdy hand cannon...",
+        src: path + "/images/Room5assets/pirate-removebg-preview.png", // Update this path to your sword image
+        SCALE_FACTOR: 6,
+        STEP_FACTOR: 0,
+        ANIMATION_RATE: 0,
+        INIT_POSITION: { x: width * 0.25, y: height * 0.6 },
+        pixels: { height: 256, width: 256 },
+        orientation: { rows: 1, columns: 1 },
+        down: { row: 0, start: 0, columns: 1 },
+        hitbox: { widthPercentage: 0.6, heightPercentage: 0.8 },
+        keypress: {}
+    };
+
 
     let bookAnswerSelected = false;
 
@@ -70,21 +86,29 @@ class MurderMysteryL5 {
 
       showBookMessage() {
         const ds = new DialogueSystem({ id: 'book_choice_' + Math.random().toString(36).slice(2, 8) });
-        ds.showDialogue('The book presents three paths. Which do you choose?', 'Ancient Book');
+        ds.showDialogue('Who is the killer?', 'Notebook');
        
         ds.addButtons([
-          { text: 'Path of Wisdom', primary: false, action: () => {
+          { text: 'Bob', primary: false, action: () => {
             bookAnswerSelected = true;
             ds.closeDialogue();
           }},
-          { text: 'Path of Courage', primary: false, action: () => {
+          { text: 'Beidou', primary: false, action: () => {
             bookAnswerSelected = true;
             ds.closeDialogue();
           }},
-          { text: 'Path of Mystery', primary: false, action: () => {
+          { text: 'Pirate Guy', primary: false, action: () => {
             bookAnswerSelected = true;
             ds.closeDialogue();
-          }}
+          }},
+          { text: 'Pirate Dude', primary: false, action: () => {
+            bookAnswerSelected = true;
+            ds.closeDialogue();
+          }},
+          { text: 'Fargus', primary: false, action: () => {
+            bookAnswerSelected = true;
+            ds.closeDialogue();
+          }} 
         ]);
       }
     }
@@ -107,22 +131,10 @@ class MurderMysteryL5 {
 
 
         const ds = new DialogueSystem({ id: 'sword_teleport_' + Math.random().toString(36).slice(2, 8) });
-        ds.showDialogue('You grasp the sword and feel a magical force pull you away...', 'Teleporting');
+        ds.showDialogue('Fight the murderer!', 'Teleporting');
         ds.addButtons([
           { text: 'Accept Fate', primary: true, action: () => {
             ds.closeDialogue();
-           
-            // Teleport to next level
-            setTimeout(() => {
-              if (typeof gameEnv !== 'undefined' && gameEnv.gameControl) {
-                const gameControl = gameEnv.gameControl;
-                gameControl.currentLevelIndex = (gameControl.currentLevelIndex || 0) + 1;
-                gameControl.isPaused = false;
-                gameControl.transitionToLevel();
-              } else {
-                console.warn('Game environment not found — cannot transition to next level.');
-              }
-            }, 500);
           }}
         ]);
       }
