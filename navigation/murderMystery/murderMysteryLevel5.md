@@ -1,7 +1,7 @@
 ---
 layout: opencs
-title: Mansion Level 5
-permalink: /gamify/mansion5
+title: Murder Mystery Level 5
+permalink: /gamify/murderMysteryL5
 microblog: true
 ---
 
@@ -22,9 +22,9 @@ html, body {
 
 <script type="module">
     // Mansion Game assets locations (use central core + GameControl)
-    import Core from "{{site.baseurl}}/assets/js/mansionGame/MansionLogic/Game.js";
-    import GameControl from "{{site.baseurl}}/assets/js/mansionGame/GameControl.js";
-    import MansionLevel5 from "{{site.baseurl}}/assets/js/mansionGame/mansionLevel5.js";
+    import Core from "{{site.baseurl}}/assets/js/murderMysteryGame/murderMysteryGameLogic";
+    import GameControl from "{{site.baseurl}}/assets/js/murderMysteryGame/GameControl.js";
+    import murderMysteryL5 from "{{site.baseurl}}/assets/js/murderMysteryGame/muderMysteryL5.js";
     import { pythonURI, javaURI, fetchOptions } from '{{site.baseurl}}/assets/js/api/config.js';
 
     // Web Server Environment data
@@ -36,7 +36,7 @@ html, body {
         fetchOptions: fetchOptions,
         gameContainer: document.getElementById("gameContainer"),
         gameCanvas: document.getElementById("gameCanvas"),
-        gameLevelClasses: [MansionLevel5]
+        gameLevelClasses: [murderMysteryL5]
 
     }
     // Launch Mansion Game using the central core and mansion GameControl

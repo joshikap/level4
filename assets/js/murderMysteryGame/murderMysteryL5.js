@@ -4,7 +4,7 @@ import Npc from "./murderymysteryGameLogic/Npc.js";
 import DialogueSystem from "./murdermysteryGameLogic/DialogueSystem.js";
 
 
-class MurderMysteryLevel5 {
+class MurderMysteryL5 {
   constructor(gameEnv) {
     let width = gameEnv.innerWidth;
     let height = gameEnv.innerHeight;
@@ -13,10 +13,10 @@ class MurderMysteryLevel5 {
 
 
     // Background data
-    const image_background = path + "/images/murdermysteryGame/kitchen_pantry.png"; // be sure to include the path
+    const image_background = path + "/images/Room5assets/BaclgroundPrepLevel.png"; // be sure to include the path
     const image_data_background = {
         name: 'background',
-        greeting: "This is the pantry, open the book and make a choice.",
+        greeting: "This is the the study. Now that you've talked to all of the suspects, open the book and choose who you think the murderer is.",
         src: image_background,
         pixels: {height: 580, width: 1038},
         mode: 'contain',
@@ -27,7 +27,7 @@ class MurderMysteryLevel5 {
     const book_sprite_data = {
         id: 'Book',
         greeting: "An ancient book...",
-        src: path + "/images/gamify/book.png", // Update this path to your book image
+        src: path + "/images/Room5assets/Book.jpeg", // Update this path to your book image
         SCALE_FACTOR: 8,
         STEP_FACTOR: 0,
         ANIMATION_RATE: 0,
@@ -44,7 +44,7 @@ class MurderMysteryLevel5 {
     const sword_sprite_data = {
         id: 'Sword',
         greeting: "A magical sword...",
-        src: path + "/images/gamify/sword.png", // Update this path to your sword image
+        src: path + "/images/Room5assets/sword.webp", // Update this path to your sword image
         SCALE_FACTOR: 6,
         STEP_FACTOR: 0,
         ANIMATION_RATE: 0,
