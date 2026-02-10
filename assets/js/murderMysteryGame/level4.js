@@ -246,3 +246,27 @@ class WallManager {
 
 // Export for use in game
 export { InvisibleWall, WallManager };
+
+const sprite_src_mc = path + "/images/mcarchie.png"; // be sure to include the path
+        const MC_SCALE_FACTOR = 6;
+        const sprite_data_mc = {
+            id: 'Archie',
+            greeting: "Hi, I am the Archie.",
+            src: sprite_src_mc,
+            SCALE_FACTOR: MC_SCALE_FACTOR,
+            STEP_FACTOR: 800,
+            ANIMATION_RATE: 10,
+            INIT_POSITION: { x: (width / 2 - width / (5 * MC_SCALE_FACTOR)), y: height - (height / MC_SCALE_FACTOR)}, 
+            pixels: {height: 2400, width: 3600},
+            orientation: {rows: 2, columns: 3},
+            down: {row: 1, start: 0, columns: 3},
+            downRight: {row: 1, start: 0, columns: 3, rotate: Math.PI/16},
+            downLeft: {row: 0, start: 0, columns: 3, rotate: -Math.PI/16},
+            left: {row: 0, start: 0, columns: 3},
+            right: {row: 1, start: 0, columns: 3},
+            up: {row: 1, start: 0, columns: 3},
+            upLeft: {row: 0, start: 0, columns: 3, rotate: Math.PI/16},
+            upRight: {row: 1, start: 0, columns: 3, rotate: -Math.PI/16},
+            hitbox: {widthPercentage: 0.45, heightPercentage: 0.2},
+            keypress: {up: 87, left: 65, down: 83, right: 68} // W, A, S, D
+        };
