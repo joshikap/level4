@@ -1,7 +1,7 @@
-import GameEnvBackground  from "./MansionLogic/GameEnvBackground.js";
-import Player from "./MansionLogic/Player.js";
-import Npc from "./MansionLogic/Npc.js";
-import DialogueSystem from "./MansionLogic/DialogueSystem.js";
+import GameEnvBackground  from "./murdermysteryGameLogic/GameEnvBackground.js";
+import Player from "./murdermysteryGameLogic/Player.js";
+import Npc from "./murderymysteryGameLogic/Npc.js";
+import DialogueSystem from "./murdermysteryGameLogic/DialogueSystem.js";
 
 
 class MurderMysteryLevel5 {
@@ -13,7 +13,7 @@ class MurderMysteryLevel5 {
 
 
     // Background data
-    const image_background = path + "/images/mansionGame/kitchen_pantry.png"; // be sure to include the path
+    const image_background = path + "/images/murdermysteryGame/kitchen_pantry.png"; // be sure to include the path
     const image_data_background = {
         name: 'background',
         greeting: "This is the pantry, open the book and make a choice.",
