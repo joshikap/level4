@@ -47,7 +47,16 @@ class CustomLevel {
             hitbox: { widthPercentage: 0.1, heightPercentage: 0.2 },
             dialogues: ['Hello, I am a monk. If you want to learn anything about'],
             reaction: function() { if (this.dialogueSystem) { this.showReactionDialogue(); } else { console.log(this.greeting); } },
-            interact: function() { if (this.dialogueSystem) { this.showRandomDialogue(); } }
+            // Set the permalink you want the player redirected to after the delay
+            permalink: '/murderMysteryGame/Level3/minigame',
+            interact: function() {
+                if (this.dialogueSystem) { this.showRandomDialogue(); }
+                const permalink = this.permalink || '/';
+                if (this._redirectTimer) { clearTimeout(this._redirectTimer); }
+                this._redirectTimer = setTimeout(() => {
+                    window.location.href = permalink;
+                }, 10000);
+            }
         };
 
 
