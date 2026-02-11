@@ -39,15 +39,10 @@ body {
     import GameControl from "{{site.baseurl}}/assets/js/mansionGame/GameControl.js";
     import { initCheats } from "{{site.baseurl}}/assets/js/mansionGame/cheats.js";
     import GameLevelMain from "{{site.baseurl}}/assets/js/mansionGame/mansionLevelMain.js";
-    import GameLevel1 from "{{site.baseurl}}/assets/js/mansionGame/mansionLevel1.js";
-    import GameLevel2 from "{{site.baseurl}}/assets/js/mansionGame/mansionLevel2.js";
-    import GameLevel3 from "{{site.baseurl}}/assets/js/mansionGame/mansionLevel3.js";
-    import GameLevel4 from "{{site.baseurl}}/assets/js/mansionGame/mansionLevel4.js";
-    import GameLevel5 from "{{site.baseurl}}/assets/js/mansionGame/mansionLevel5.js";
-    import GameLevel6 from "{{site.baseurl}}/assets/js/mansionGame/mansionLevel6.js";
+    import GameLevel3 from "{{site.baseurl}}/assets/js/murderMysteryGame/murderMysteryLevel3.js";
     import { pythonURI, javaURI, fetchOptions } from '{{site.baseurl}}/assets/js/api/config.js';
 
-    const gameLevelClasses = [GameLevelMain, GameLevel1, GameLevel2, GameLevel3, GameLevel4, GameLevel5, GameLevel6 ];
+    const gameLevelClasses = [GameLevel3];
 
     // Web Server Environment data
     const environment = {
