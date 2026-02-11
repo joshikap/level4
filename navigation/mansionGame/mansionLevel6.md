@@ -32,3 +32,4 @@ microblog: true
     // Launch Mansion Game using the central core and mansion GameControl
     Core.main(environment, GameControl);
 </script>
+
