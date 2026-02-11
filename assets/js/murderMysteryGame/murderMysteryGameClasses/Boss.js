@@ -1,10 +1,9 @@
-import Enemy from '../MansionLogic/Enemy.js';
-import Boomerang from './Boomerang.js';
+import Enemy from '../murderMysteryGameLogic/Enemy.js';
 import Projectile from './Projectile.js';
-import Arm from './Arm.js';
+import ChargeAttack from './Charge.js';
 import showEndScreen from './EndScreen.js';
-import Player from '../MansionLogic/Player.js';
-import { updateBossHealthBar } from './HealthBars.js';
+import Player from '../murderMysteryGameLogic/Player.js';
+import HealthBars from './HealthBars.js';
 
 /*
     Boss class to define the Reaper
@@ -24,65 +23,16 @@ class Boss extends Enemy {
         this.fullHealth = data?.initialHealth || 1500;
         this.healthPoints = this.fullHealth;
 
-        this.arrows = [];
         this.fireballs = [];
-        this.scythes = [];
+        this.charges = [];
         this.lastAttackTime = Date.now();
         this.attackInterval = data?.attackInterval || 2000;
         this.angerModifier = 1;
         this.attackProbShift = 0.05;
 
-        // Debug/cheat key code - uncomment to enable
-        // Add a debug/cheat key ('p') that instantly defeats this boss
-        this._killKeyHandler = (event) => {
-            try {
-                if (!event || !event.key) return;
-                if (event.key === 'p' || event.key === 'P') {
-                    console.log("[Boss] Kill key pressed: forcing boss death.");
-                    this.healthPoints = 0;
-                     window.__mansionLevelEnded = true;
-                    // Show victory screen immediately
-                    try { showEndScreen(this.gameEnv); } catch (e) { console.warn('Error showing victory screen:', e); }
-                    // Remove the boss graphic and objects from the game
-                    try { this.destroy(); } catch (e) { console.warn('Error destroying boss:', e); }
-                    // End the current level so game control can transition
-                    try {
-                        if (this.gameEnv && this.gameEnv.gameControl && this.gameEnv.gameControl.currentLevel) {
-                            this.gameEnv.gameControl.currentLevel.continue = false;
-                        }
-                    } catch (e) { console.warn('Error ending level after boss kill:', e); }
-                }
-            } catch (e) { console.error('Kill key handler error:', e); }
-        };
+        this.projectileTypes = data?.projectileTypes || ['FIREBALL'];
 
-        // Attach the listener to window so it's active while the boss exists
-        if (typeof window !== 'undefined') window.addEventListener('keydown', this._killKeyHandler);
-        
-
-        this.projectileTypes = data?.projectileTypes || ['FIREBALL', 'ARROW'];
-
-        // Initialize arms
-        
-        this.leftArm = new Arm({
-            xOffset: -60,
-            yOffset: 20,
-            weaponSrc: "../../images/mansionGame/ReaperLeftHandScythe.png",
-            emptySrc: "../../images/mansionGame/ReaperLeftHandEmpty.png",
-            hasWeapon: true
-        }, gameEnv);
-
-        this.rightArm = new Arm({
-            xOffset: 60,
-            yOffset: 20,
-            weaponSrc: "../../images/mansionGame/ReaperRightHandScythe.png",
-            emptySrc: "../../images/mansionGame/ReaperRightHandEmpty.png",
-            hasWeapon: true
-        }, gameEnv);
-        
-
-        //this.arms = [this.leftArm, this.rightArm];
-
-        this.isThrowingScythe = false;
+        this.isCharging = false;
     }
 
     // Update function for the Boss
@@ -132,7 +82,7 @@ class Boss extends Enemy {
         this.angerModifier = this.stage === 3 ? 2 : 1;
 
         // Update projectiles
-        [...this.fireballs, ...this.arrows].forEach(p => {
+        this.fireballs.forEach(p => {
             if (p.revComplete) {
                 p.destroy();
             } else {
@@ -140,18 +90,13 @@ class Boss extends Enemy {
             }
         });
         this.fireballs = this.fireballs.filter(p => !p.revComplete);
-        this.arrows = this.arrows.filter(p => !p.revComplete);
 
-        // Update scythes
-        this.scythes.forEach(s => s.update());
-        this.scythes = this.scythes.filter(s => !s.revComplete);
-        if (this.scythes.length === 0) {
-            this.isThrowingScythe = false;
-            this.leftArm.restoreWeapon(); // return scythe to left arm
+        // Update charge
+        this.charges.forEach(c => c.update());
+        this.charges = this.charges.filter(c => !c.revComplete);
+        if (this.charges.length === 0) {
+            this.isCharging = false;
         }
-
-        // Update arms to follow the boss
-        //this.arms.forEach(arm => arm.update(this.position.x, this.position.y));
 
         // Attack logic
         const now = Date.now();
@@ -163,7 +108,7 @@ class Boss extends Enemy {
 
         // Movement toward nearest player if not throwing scythe
         /*
-        if (!this.isThrowingScythe) {
+        if (!this.isCharging) {
             const target = this.findNearestPlayer();
             if (target) this.moveToward(target, 0.25);
         }
@@ -197,16 +142,11 @@ class Boss extends Enemy {
         const attackProbModifier = this.attackProbShift * (this.stage - 1);
         
         if (this.stage >= 2 && rand < 0.3 + attackProbModifier) {
-            this.scytheAttack(target);
+            this.chargeAttack(target);
         } else if (rand < 0.6 + attackProbModifier) {
             this.fireballAttack(target);
-        } else {
-            this.arrowAttack(target);
         }
         
-
-        // shoots only scythes for debugging
-        // this.scytheAttack(target);
     }
 
     // Move towards a certian location
@@ -223,42 +163,17 @@ class Boss extends Enemy {
         throw new Error("Reapers cannot explode! (yet :})");
     }
 
-    scytheAttack(target) {
-        // Use left arm to throw scythe
-        //this.leftArm.removeWeapon();
-        this.scythes.push(new Boomerang(this.gameEnv, target.position.x, target.position.y, this.position.x, this.position.y));
-        this.isThrowingScythe = true;
-    }
+    chargeAttack(target) {
+    // Charge at the player
+    this.charges.push(new ChargeAttack(this.gameEnv, this, target.position.x, target.position.y));
+    this.isCharging = true;
+}
 
     fireballAttack(target) {
         //this.rightArm.shoot();
         this.fireballs.push(new Projectile(this.gameEnv, target.position.x, target.position.y, this.position.x, this.position.y, "FIREBALL"));
     }
 
-    arrowAttack(target) {
-        //this.rightArm.shoot();
-        this.arrows.push(new Projectile(this.gameEnv, target.position.x, target.position.y, this.position.x, this.position.y, "ARROW"));
-    }
-
-    /*
-    addArm(arm) {
-        this.arms.push(arm);
-    }
-    */
-
-    /* Debug/cheat destroy override - uncomment with key handler above
-    // Ensure we clean up the key listener when the boss is destroyed
-    destroy() {
-        try {
-            if (typeof window !== 'undefined' && this._killKeyHandler) {
-                window.removeEventListener('keydown', this._killKeyHandler);
-            }
-        } catch (e) { console.warn('Failed to remove boss key listener:', e); }
-
-        // Call parent destroy if available (Character -> GameObject)
-        if (super.destroy) super.destroy();
-    }
-    */
 }
 
 export default Boss;
