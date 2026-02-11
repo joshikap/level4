@@ -1,7 +1,7 @@
 ---
 layout: opencs
 title: Mansion Level 3
-permalink: /murdermystery3
+permalink: /murderMysteryGame/level3
 microblog: true
 ---
 
@@ -18,7 +18,7 @@ Launcher File
     import Core from "{{site.baseurl}}/assets/js/murderMysteryGame/murderMysteryGameLogic/Game.js";
     import GameControl from "{{site.baseurl}}/assets/js/murderMysteryGame/murderMysteryGameLogic/GameControl.js";
     import { initCheats } from "{{site.baseurl}}/assets/js/murderMysteryGame/cheats.js";
-    import GameLevel3 from "{{site.baseurl}}/assets/js/murderMysteryGame/mansionLevel3.js";
+    import GameLevel3 from "{{site.baseurl}}/assets/js/murderMysteryGame/murderMysteryLevel3.js";
     import { pythonURI, javaURI, fetchOptions } from '{{site.baseurl}}/assets/js/api/config.js';
 
     // Web Server Environment data
