@@ -79,7 +79,9 @@ class Boss extends Enemy {
         const healthRatio = this.healthPoints / this.fullHealth;
         this.stage = healthRatio < 0.33 ? 3 : (healthRatio < 0.66 ? 2 : 1);
         this.attackInterval = this.stage === 3 ? 1000 : this.stage === 2 ? 1500 : 2000;
-        this.angerModifier = this.stage === 3 ? 2 : 1;
+        
+        // Double damage at half health (50%) or below
+        this.angerModifier = healthRatio <= 0.5 ? 2 : 1;
 
         // Update projectiles
         this.fireballs.forEach(p => {
